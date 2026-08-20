@@ -51,8 +51,6 @@ func (c *Cache) GetAll() []*RoomSnapshot {
 
 // Set 写入房间快照。
 func (c *Cache) Set(roomID int64, s *RoomSnapshot) {
-	c.mu.Lock()
-	defer c.mu.Unlock()
 	s.UpdatedAt = time.Now()
 	c.snapshot[roomID] = s
 	c.updatedAt = time.Now()
