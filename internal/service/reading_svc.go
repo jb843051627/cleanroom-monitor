@@ -61,7 +61,7 @@ func (s *ReadingService) Ingest(ctx context.Context, batch *model.ReadingBatch) 
 			measuredAt = now
 		}
 		key := in.PointID
-		if prev, ok := seen[key]; ok && prev.Equal(measuredAt) {
+		if prev, ok := seen[key]; ok && prev.After(measuredAt) {
 			continue
 		}
 		seen[key] = measuredAt
