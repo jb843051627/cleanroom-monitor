@@ -4,20 +4,20 @@
 
 ## 镜像名
 
-`benzhi/cleanroom-monitor-bug-<N>:latest`（N 为 bug 分支编号，如 bug-1）。
+`benzhi/cleanroom-monitor-variant-N:latest`（N 为 bug 分支编号，如 bug-1）。
 
 ## 构建
 
 ```bash
-./build_benzhi_docker.sh cleanroom-monitor-bug-1 linux/amd64
-./build_benzhi_docker.sh cleanroom-monitor-bug-1 linux/arm64
+./build_benzhi_docker.sh cleanroom-monitor-variant-1 linux/amd64
+./build_benzhi_docker.sh cleanroom-monitor-variant-1 linux/arm64
 ```
 
 ## 运行
 
 ```bash
 docker run --rm -p 8080:8080 -e CR_DB_PATH=/data/cleanroom.db \
-  -v $PWD/data:/data benzhi/cleanroom-monitor-bug-1:latest
+  -v $PWD/data:/data benzhi/cleanroom-monitor-variant-1:latest
 ```
 
 访问 http://localhost:8080/web/index.html 查看监控看板。
