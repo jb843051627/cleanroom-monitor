@@ -22,7 +22,8 @@ type PointStore interface {
 }
 
 type SQLPointStore struct {
-	db *DB
+	db        *DB
+	cacheList []*model.MonitoringPoint
 }
 
 func NewPointStore(db *DB) PointStore {
@@ -76,12 +77,20 @@ func (s *SQLPointStore) GetByCode(ctx context.Context, code string) (*model.Moni
 }
 
 func (s *SQLPointStore) ListByRoom(ctx context.Context, roomID int64) ([]*model.MonitoringPoint, error) {
+	if s.cacheList != nil {
+		return s.cacheList, nil
+	}
 	rows, err := s.db.QueryContext(ctx, "SELECT "+pointCols+" FROM monitoring_points WHERE room_id = ? ORDER BY id", roomID)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	return scanPoints(rows)
+	out, err := scanPoints(rows)
+	if err != nil {
+		return nil, err
+	}
+	s.cacheList = out
+	return out, nil
 }
 
 func (s *SQLPointStore) ListByParam(ctx context.Context, paramType string) ([]*model.MonitoringPoint, error) {
