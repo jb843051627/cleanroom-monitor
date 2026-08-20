@@ -52,7 +52,7 @@ func (s *DashboardService) Refresh(ctx context.Context) error {
 	for _, r := range rooms {
 		snap, err := s.buildRoomSnapshot(ctx, r)
 		if err != nil {
-			return err
+			continue
 		}
 		s.cache.Set(r.ID, snap)
 	}
@@ -72,7 +72,7 @@ func (s *DashboardService) buildRoomSnapshot(ctx context.Context, room *model.Ro
 	snap.OpenAlerts = openAlerts
 	points, err := s.points.ListByRoom(ctx, room.ID)
 	if err != nil {
-		return nil, err
+		return snap, nil
 	}
 	var realtime []model.RealtimeReading
 	for _, p := range points {
