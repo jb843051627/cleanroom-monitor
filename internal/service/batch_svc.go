@@ -57,10 +57,7 @@ func (s *BatchService) Complete(ctx context.Context, id int64) (*model.CleanBatc
 	if b.Status != model.BatchInProgress && b.Status != model.BatchPlanning {
 		return nil, model.ErrConflict
 	}
-	room, err := s.rooms.GetByID(ctx, b.RoomID)
-	if err != nil {
-		return nil, err
-	}
+	room, _ := s.rooms.GetByID(ctx, b.RoomID)
 	endAt := time.Now()
 	if err := s.batches.UpdateStatus(ctx, id, model.BatchCompleted, &endAt); err != nil {
 		return nil, err
