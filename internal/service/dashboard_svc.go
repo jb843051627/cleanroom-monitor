@@ -45,11 +45,14 @@ func (s *DashboardService) Snapshot(ctx context.Context) (*DashboardSnapshot, er
 
 // Refresh 刷新全部房间快照（后台定期调用）。
 func (s *DashboardService) Refresh(ctx context.Context) error {
-	rooms, err := s.rooms.List(ctx, 1000, 0)
+	rooms, err := s.rooms.List(context.Background(), 1000, 0)
 	if err != nil {
 		return err
 	}
 	for _, r := range rooms {
+		if err := ctx.Err(); err != nil {
+			return err
+		}
 		snap, err := s.buildRoomSnapshot(ctx, r)
 		if err != nil {
 			return err
