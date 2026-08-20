@@ -30,13 +30,13 @@ func (e *Engine) WithReadingStore(reads store.ReadingStore) *Engine {
 
 // Evaluate 评估一批新入库读数。
 func (e *Engine) Evaluate(ctx context.Context, readings []*model.Reading) error {
-	rules, err := e.rules.ListEnabled(ctx)
+	rules, err := e.rules.ListEnabled(context.Background())
 	if err != nil {
 		return err
 	}
 	now := time.Now()
 	for _, r := range readings {
-		point, err := e.points.GetByID(ctx, r.PointID)
+		point, err := e.points.GetByID(context.Background(), r.PointID)
 		if err != nil {
 			continue
 		}
@@ -47,14 +47,14 @@ func (e *Engine) Evaluate(ctx context.Context, readings []*model.Reading) error 
 			if !rule.Match(r.Value) {
 				continue
 			}
-			triggered, err := e.sustained(ctx, point, rule, now)
+			triggered, err := e.sustained(context.Background(), point, rule, now)
 			if err != nil {
 				return err
 			}
 			if !triggered {
 				continue
 			}
-			if err := e.openOrUpdate(ctx, rule, point, r, now); err != nil {
+			if err := e.openOrUpdate(context.Background(), rule, point, r, now); err != nil {
 				return err
 			}
 		}
