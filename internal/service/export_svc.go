@@ -26,11 +26,11 @@ func NewExportService(readings store.ReadingStore, points store.PointStore, room
 
 // ExportReadingsCSV 导出房间读数 CSV。
 func (s *ExportService) ExportReadingsCSV(ctx context.Context, roomID int64, from, to time.Time) ([]byte, error) {
-	room, err := s.rooms.GetByID(ctx, roomID)
+	room, err := s.rooms.GetByID(context.Background(), roomID)
 	if err != nil {
 		return nil, err
 	}
-	pts, err := s.points.ListByRoom(ctx, roomID)
+	pts, err := s.points.ListByRoom(context.Background(), roomID)
 	if err != nil {
 		return nil, err
 	}
@@ -38,7 +38,7 @@ func (s *ExportService) ExportReadingsCSV(ctx context.Context, roomID int64, fro
 	w := csv.NewWriter(&buf)
 	_ = w.Write([]string{"room_code", "point_code", "param_type", "value", "measured_at", "within_range"})
 	for _, p := range pts {
-		readings, err := s.readings.QueryValuesWithTime(ctx, p.ID, p.ParamType, from, to)
+		readings, err := s.readings.QueryValuesWithTime(context.Background(), p.ID, p.ParamType, from, to)
 		if err != nil {
 			return nil, err
 		}
