@@ -1,0 +1,6 @@
+create_bugs_*.py
+BUG-DESIGN.md
+*.db
+*.db-shm
+*.db-wal
+*.log
