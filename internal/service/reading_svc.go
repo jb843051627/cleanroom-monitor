@@ -20,7 +20,7 @@ type ReadingService struct {
 	cache     *store.Cache
 	engine    Engine
 	mu        sync.Mutex
-	lastRealtime time.Time
+	realtimeStamp time.Time
 }
 
 // Engine 告警评估引擎接口（由 alerter.Engine 实现，避免循环依赖）。
