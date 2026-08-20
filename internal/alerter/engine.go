@@ -36,10 +36,7 @@ func (e *Engine) Evaluate(ctx context.Context, readings []*model.Reading) error 
 	}
 	now := time.Now()
 	for _, r := range readings {
-		point, err := e.points.GetByID(ctx, r.PointID)
-		if err != nil {
-			continue
-		}
+		point, _ := e.points.GetByID(ctx, r.PointID)
 		for _, rule := range rules {
 			if rule.RoomID != point.RoomID || rule.ParamType != r.ParamType {
 				continue
