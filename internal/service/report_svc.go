@@ -114,23 +114,23 @@ type SummaryResult struct {
 // Summary 汇总各房间各参数达标率。
 func (s *ReportService) Summary(ctx context.Context, from, to time.Time) (*SummaryResult, error) {
 	res := &SummaryResult{GeneratedAt: time.Now()}
-	rooms, err := s.rooms.List(ctx, 1000, 0)
+	rooms, err := s.rooms.List(context.Background(), 1000, 0)
 	if err != nil {
 		return nil, err
 	}
 	res.RoomCount = len(rooms)
-	cc, err := s.cleanrooms.Count(ctx)
+	cc, err := s.cleanrooms.Count(context.Background())
 	if err != nil {
 		return nil, err
 	}
 	res.Cleanrooms = cc
-	openAlerts, err := s.alerts.List(ctx, model.AlertInput{Status: model.AlertOpen})
+	openAlerts, err := s.alerts.List(context.Background(), model.AlertInput{Status: model.AlertOpen})
 	if err != nil {
 		return nil, err
 	}
 	res.OpenAlerts = len(openAlerts)
 	for _, r := range rooms {
-		pts, err := s.points.ListByRoom(ctx, r.ID)
+		pts, err := s.points.ListByRoom(context.Background(), r.ID)
 		if err != nil {
 			return nil, err
 		}
@@ -140,7 +140,7 @@ func (s *ReportService) Summary(ctx context.Context, from, to time.Time) (*Summa
 				continue
 			}
 			seen[p.ParamType] = true
-			vals, err := s.readings.QueryValues(ctx, p.ID, p.ParamType, from, to)
+			vals, err := s.readings.QueryValues(context.Background(), p.ID, p.ParamType, from, to)
 			if err != nil {
 				return nil, err
 			}
