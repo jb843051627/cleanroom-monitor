@@ -44,7 +44,7 @@ func (s *BatchService) Start(ctx context.Context, in *model.BatchInput) (*model.
 	if err := s.batches.Create(ctx, b); err != nil {
 		return nil, err
 	}
-	_ = s.transition(ctx, room, model.StateNormal, model.ReasonBatchStarted, b.ID)
+	defer s.transition(ctx, room, model.StateNormal, model.ReasonBatchStarted, b.ID)
 	return b, nil
 }
 
