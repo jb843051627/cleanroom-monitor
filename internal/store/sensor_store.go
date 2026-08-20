@@ -34,15 +34,15 @@ const sensorCols = "id, point_id, serial, vendor, last_seen_at, battery, status,
 
 func scanSensor(row interface{ Scan(...any) error }) (*model.Sensor, error) {
 	var s model.Sensor
-	var lastSeen, calDue, createdAt sql.NullTime
-	if err := row.Scan(&s.ID, &s.PointID, &s.Serial, &s.Vendor, &lastSeen, &s.Battery,
+	var seenAt, calDue, createdAt sql.NullTime
+	if err := row.Scan(&s.ID, &s.PointID, &s.Serial, &s.Vendor, &seenAt, &s.Battery,
 		&s.Status, &calDue, &createdAt); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, model.ErrNotFound
 		}
 		return nil, err
 	}
-	s.LastSeenAt = lastSeen.Time
+	s.LastSeenAt = seenAt.Time
 	s.CalibrationDueAt = calDue.Time
 	s.CreatedAt = createdAt.Time
 	return &s, nil
