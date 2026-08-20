@@ -67,7 +67,7 @@ func (s *BatchService) Complete(ctx context.Context, id int64) (*model.CleanBatc
 	}
 	b.Status = model.BatchCompleted
 	b.EndAt = &endAt
-	openAlarm, err := s.alerts.CountOpenByLevel(ctx, b.RoomID, model.AlertAlarm)
+	openAlarm, err := s.alerts.CountOpenByRoom(ctx, b.RoomID)
 	if err != nil {
 		return nil, err
 	}
