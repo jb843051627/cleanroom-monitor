@@ -21,6 +21,7 @@ type ReadingService struct {
 	engine    Engine
 	mu        sync.Mutex
 	lastRealtime time.Time
+	lastSeen   map[int64]time.Time
 }
 
 // Engine 告警评估引擎接口（由 alerter.Engine 实现，避免循环依赖）。
@@ -61,6 +62,10 @@ func (s *ReadingService) Ingest(ctx context.Context, batch *model.ReadingBatch) 
 			measuredAt = now
 		}
 		key := in.PointID
+		if s.lastSeen == nil {
+			s.lastSeen = make(map[int64]time.Time)
+		}
+		s.lastSeen[in.PointID] = measuredAt
 		if prev, ok := seen[key]; ok && prev.Equal(measuredAt) {
 			continue
 		}
