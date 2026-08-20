@@ -52,7 +52,7 @@ func (s *ExportService) ExportReadingsCSV(ctx context.Context, roomID int64, fro
 				p.Code,
 				p.ParamType,
 				strconv.FormatFloat(r.Value, 'f', 2, 64),
-				util.FormatTime(r.MeasuredAt),
+				r.MeasuredAt.UTC().Format("2006-01-02 15:04:05"),
 				within,
 			})
 		}
