@@ -23,7 +23,8 @@ type AlertStore interface {
 }
 
 type SQLAlertStore struct {
-	db *DB
+	db        *DB
+	cacheList []*model.Alert
 }
 
 func NewAlertStore(db *DB) AlertStore {
@@ -113,6 +114,9 @@ func (s *SQLAlertStore) List(ctx context.Context, in model.AlertInput) ([]*model
 	}
 	q += " LIMIT ?"
 	args = append(args, in.Limit)
+	if s.cacheList != nil {
+		return s.cacheList, nil
+	}
 	rows, err := s.db.QueryContext(ctx, q, args...)
 	if err != nil {
 		return nil, err
@@ -126,6 +130,7 @@ func (s *SQLAlertStore) List(ctx context.Context, in model.AlertInput) ([]*model
 		}
 		out = append(out, a)
 	}
+	s.cacheList = out
 	return out, rows.Err()
 }
 
