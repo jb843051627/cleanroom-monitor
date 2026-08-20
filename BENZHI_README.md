@@ -4,7 +4,7 @@
 
 ## 镜像名
 
-`benzhi/cleanroom-monitor-variant-N:latest`（N 为 bug 分支编号，如 bug-1）。
+`benzhi/cleanroom-monitor-variant-N:latest`（N 为 bug 分支编号，如 variant-1）。
 
 ## 构建
 
