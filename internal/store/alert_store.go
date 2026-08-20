@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"fmt"
 	"time"
 
 	"cleanroom-monitor/internal/model"
@@ -152,7 +153,11 @@ func (s *SQLAlertStore) OpenByRulePoint(ctx context.Context, ruleID, pointID int
 	row := s.db.QueryRowContext(ctx,
 		"SELECT "+alertCols+" FROM alerts WHERE rule_id=? AND point_id=? AND status IN ('open','acknowledged') ORDER BY opened_at LIMIT 1",
 		ruleID, pointID)
-	return scanAlert(row)
+	a, err := scanAlert(row)
+	if err != nil {
+		return nil, fmt.Errorf("查询未决告警: %w", err)
+	}
+	return a, nil
 }
 
 func (s *SQLAlertStore) SetAck(ctx context.Context, id int64, at time.Time) error {
