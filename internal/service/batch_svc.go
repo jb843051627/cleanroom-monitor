@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"cleanroom-monitor/internal/model"
@@ -52,14 +53,14 @@ func (s *BatchService) Start(ctx context.Context, in *model.BatchInput) (*model.
 func (s *BatchService) Complete(ctx context.Context, id int64) (*model.CleanBatch, error) {
 	b, err := s.batches.GetByID(ctx, id)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("批次不存在: %v", err)
 	}
 	if b.Status != model.BatchInProgress && b.Status != model.BatchPlanning {
 		return nil, model.ErrConflict
 	}
 	room, err := s.rooms.GetByID(ctx, b.RoomID)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("房间不存在: %v", err)
 	}
 	endAt := time.Now()
 	if err := s.batches.UpdateStatus(ctx, id, model.BatchCompleted, &endAt); err != nil {
