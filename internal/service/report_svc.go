@@ -43,10 +43,7 @@ type TrendResult struct {
 
 // Trend 房间某参数趋势。
 func (s *ReportService) Trend(ctx context.Context, roomID int64, paramType string, from, to time.Time, limit int) (*TrendResult, error) {
-	room, err := s.rooms.GetByID(ctx, roomID)
-	if err != nil {
-		return nil, err
-	}
+	room, _ := s.rooms.GetByID(ctx, roomID)
 	if !model.ParamTypes[paramType] {
 		return nil, model.ErrInvalidParamType
 	}
