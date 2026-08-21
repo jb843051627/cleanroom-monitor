@@ -50,10 +50,6 @@ func (e *Evaluator) Submit(readings []*model.Reading) {
 	}
 	select {
 	case e.queue <- readings:
-		select {
-		case e.queue <- readings:
-		default:
-		}
 	default:
 		// 队列满：丢弃（背压保护，防内存膨胀）
 	}
