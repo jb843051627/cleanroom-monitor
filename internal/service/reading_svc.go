@@ -3,7 +3,6 @@ package service
 import (
 	"context"
 	"errors"
-	"sync"
 	"time"
 
 	"cleanroom-monitor/internal/model"
@@ -12,16 +11,15 @@ import (
 )
 
 // ReadingService 读数服务：入库、去重、评估触发、查询聚合。
+// 本服务支持多 goroutine 并发调用 Ingest（HTTP 上报多传感器并发），
+// 因此方法间不得共享可变状态：所有中间状态必须限定在单次调用的局部变量内。
 type ReadingService struct {
-	readings  store.ReadingStore
-	points    store.PointStore
-	sensors   store.SensorStore
-	alerts    store.AlertStore
-	cache     *store.Cache
-	engine    Engine
-	mu        sync.Mutex
-	realtimeStamp time.Time
-	ingestTimestamps   map[int64]time.Time
+	readings store.ReadingStore
+	points   store.PointStore
+	sensors  store.SensorStore
+	alerts   store.AlertStore
+	cache    *store.Cache
+	engine   Engine
 }
 
 // Engine 告警评估引擎接口（由 alerter.Engine 实现，避免循环依赖）。
@@ -62,10 +60,6 @@ func (s *ReadingService) Ingest(ctx context.Context, batch *model.ReadingBatch) 
 			measuredAt = now
 		}
 		key := in.PointID
-		if s.ingestTimestamps == nil {
-			s.ingestTimestamps = make(map[int64]time.Time)
-		}
-		s.ingestTimestamps[in.PointID] = measuredAt
 		if prev, ok := seen[key]; ok && prev.Equal(measuredAt) {
 			continue
 		}
