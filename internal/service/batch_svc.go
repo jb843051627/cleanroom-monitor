@@ -44,7 +44,12 @@ func (s *BatchService) Start(ctx context.Context, in *model.BatchInput) (*model.
 	if err := s.batches.Create(ctx, b); err != nil {
 		return nil, err
 	}
-	defer s.transition(ctx, room, model.StateNormal, model.ReasonBatchStarted, b.ID)
+	if err := s.transition(ctx, room, model.StateNormal, model.ReasonBatchStarted, b.ID); err != nil {
+		// 房间状态机转换失败：回滚批次，避免遗留卡住的 in_progress 批次。
+		endAt := time.Now()
+		_ = s.batches.UpdateStatus(ctx, b.ID, model.BatchAborted, &endAt)
+		return nil, err
+	}
 	return b, nil
 }
 
