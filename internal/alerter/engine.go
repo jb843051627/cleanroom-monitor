@@ -2,6 +2,7 @@ package alerter
 
 import (
 	"context"
+	"errors"
 	"time"
 
 	"cleanroom-monitor/internal/model"
@@ -36,7 +37,14 @@ func (e *Engine) Evaluate(ctx context.Context, readings []*model.Reading) error 
 	}
 	now := time.Now()
 	for _, r := range readings {
-		point, _ := e.points.GetByID(ctx, r.PointID)
+		point, err := e.points.GetByID(ctx, r.PointID)
+		if err != nil {
+			// 点位已注销（设备切换期间旧网关仍上报）：跳过该读数，避免空指针带崩进程。
+			if errors.Is(err, model.ErrNotFound) {
+				continue
+			}
+			return err
+		}
 		for _, rule := range rules {
 			if rule.RoomID != point.RoomID || rule.ParamType != r.ParamType {
 				continue
