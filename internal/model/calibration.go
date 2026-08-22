@@ -46,13 +46,17 @@ func (c *Calibration) Validate() error {
 	return nil
 }
 
-// UpdateSensorDueDate 根据校准记录更新传感器下次校准时间。
+// UpdateSensorDueDate 根据校准记录更新传感器下次校准时间与状态。
+// 校准失败：传感器标记 fault，其读数不再参与告警评估；
+// 校准通过：若此前因校准问题为 fault，恢复为 active。
 func (c *Calibration) UpdateSensorDueDate(s *Sensor) {
 	s.CalibrationDueAt = c.DueAt
 	if c.Result == "fail" {
-		s.Status = SensorActive
-	} else if s.Status == SensorFault {
 		s.Status = SensorFault
+		return
+	}
+	if s.Status == SensorFault {
+		s.Status = SensorActive
 	}
 }
 

@@ -110,8 +110,13 @@ func (s *SQLSensorStore) List(ctx context.Context, limit, offset int) ([]*model.
 	return out, rows.Err()
 }
 
+// UpdateLastSeen 刷新最近上报时间。
+// 注意：不得覆盖 fault 状态——校准失败的传感器即便仍有读数上报，
+// 也必须保持 fault，其读数不再参与告警评估；仅 offline 可恢复为 active。
 func (s *SQLSensorStore) UpdateLastSeen(ctx context.Context, id int64, at time.Time) error {
-	_, err := s.db.ExecContext(ctx, "UPDATE sensors SET last_seen_at=?, status='active' WHERE id=?", at, id)
+	_, err := s.db.ExecContext(ctx,
+		"UPDATE sensors SET last_seen_at=?, status=CASE WHEN status='fault' THEN status ELSE 'active' END WHERE id=?",
+		at, id)
 	return err
 }
 
