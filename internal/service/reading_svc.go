@@ -60,8 +60,11 @@ func (s *ReadingService) Ingest(ctx context.Context, batch *model.ReadingBatch) 
 		if measuredAt.IsZero() {
 			measuredAt = now
 		}
+		// 统一到秒精度：同一采集端一秒内多次上送（只差几百毫秒）应按
+		// (point_id, measured_at) 去重，亚秒级差异不能绕过去重。
+		measuredAt = util.TruncateSecond(measuredAt)
 		key := in.PointID
-		if prev, ok := seen[key]; ok && prev.After(measuredAt) {
+		if prev, ok := seen[key]; ok && !prev.Before(measuredAt) {
 			continue
 		}
 		seen[key] = measuredAt
