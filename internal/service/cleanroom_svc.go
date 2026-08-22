@@ -57,7 +57,9 @@ func (s *CleanroomService) Update(ctx context.Context, id int64, in *model.Clean
 	c.Code = in.Code
 	c.Grade = in.Grade
 	c.AreaSqm = in.AreaSqm
-	_ = c.Validate()
+	if err := c.Validate(); err != nil {
+		return nil, err
+	}
 	if err := s.store.Update(ctx, c); err != nil {
 		return nil, err
 	}
