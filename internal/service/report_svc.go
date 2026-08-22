@@ -85,7 +85,10 @@ func (s *ReportService) Trend(ctx context.Context, roomID int64, paramType strin
 			})
 		}
 	}
-	res.Points = res.Points[len(res.Points)-limit:]
+	// 取最近 limit 个点；读数不足 limit 时下界 clamp 到 0，避免切片越界 panic。
+	if len(res.Points) > limit {
+		res.Points = res.Points[len(res.Points)-limit:]
+	}
 	return res, nil
 }
 
