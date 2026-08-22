@@ -31,22 +31,42 @@ func NewCache() *Cache {
 }
 
 // Get 读取房间快照。
+// 返回快照的副本：克隆 Realtime 切片底层数组，避免调用方对返回值
+// 原地排序或追加时污染缓存内部状态（读数互不影响）。
 func (c *Cache) Get(roomID int64) (*RoomSnapshot, bool) {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
 	s, ok := c.snapshot[roomID]
-	return s, ok
+	if !ok {
+		return nil, false
+	}
+	return cloneSnapshot(s), true
 }
 
 // GetAll 读取全部快照。
+// 返回快照的副本：克隆 Realtime 切片底层数组，避免调用方对返回值
+// 原地排序或追加时污染缓存内部状态（读数互不影响）。
 func (c *Cache) GetAll() []*RoomSnapshot {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
 	out := make([]*RoomSnapshot, 0, len(c.snapshot))
 	for _, s := range c.snapshot {
-		out = append(out, s)
+		out = append(out, cloneSnapshot(s))
 	}
 	return out
+}
+
+// cloneSnapshot 复制快照：浅拷贝值字段，并复制 Realtime 切片底层数组，
+// 使副本与缓存内部的切片不共享底层数据。RealtimeReading 元素均为值类型
+// 与 string（不可变），故一层 copy 即可隔离。
+func cloneSnapshot(s *RoomSnapshot) *RoomSnapshot {
+	cp := *s
+	if s.Realtime != nil {
+		rt := make([]model.RealtimeReading, len(s.Realtime))
+		copy(rt, s.Realtime)
+		cp.Realtime = rt
+	}
+	return &cp
 }
 
 // Set 写入房间快照。
