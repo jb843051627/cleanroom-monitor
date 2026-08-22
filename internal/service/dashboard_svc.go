@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"errors"
 	"time"
 
 	"cleanroom-monitor/internal/model"
@@ -45,7 +46,7 @@ func (s *DashboardService) Snapshot(ctx context.Context) (*DashboardSnapshot, er
 
 // Refresh 刷新全部房间快照（后台定期调用）。
 func (s *DashboardService) Refresh(ctx context.Context) error {
-	rooms, err := s.rooms.List(context.Background(), 1000, 0)
+	rooms, err := s.rooms.List(ctx, 1000, 0)
 	if err != nil {
 		return err
 	}
@@ -81,7 +82,11 @@ func (s *DashboardService) buildRoomSnapshot(ctx context.Context, room *model.Ro
 	for _, p := range points {
 		latest, err := s.readings.LatestByPoint(ctx, p.ID)
 		if err != nil {
-			continue
+			// 仅“无读数”跳过该点位；其余错误（含 ctx 取消）向上传播，保证刷新及时收尾。
+			if errors.Is(err, model.ErrNotFound) {
+				continue
+			}
+			return nil, err
 		}
 		realtime = append(realtime, model.RealtimeReading{
 			PointID:    p.ID,
