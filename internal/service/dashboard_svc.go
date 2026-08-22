@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"errors"
 	"time"
 
 	"cleanroom-monitor/internal/model"
@@ -44,19 +45,22 @@ func (s *DashboardService) Snapshot(ctx context.Context) (*DashboardSnapshot, er
 }
 
 // Refresh 刷新全部房间快照（后台定期调用）。
+// 单个房间失败不中断其余房间的刷新，但错误会被聚合返回，避免被静默吞掉。
 func (s *DashboardService) Refresh(ctx context.Context) error {
 	rooms, err := s.rooms.List(ctx, 1000, 0)
 	if err != nil {
 		return err
 	}
+	var errs []error
 	for _, r := range rooms {
 		snap, err := s.buildRoomSnapshot(ctx, r)
 		if err != nil {
+			errs = append(errs, err)
 			continue
 		}
 		s.cache.Set(r.ID, snap)
 	}
-	return nil
+	return errors.Join(errs...)
 }
 
 func (s *DashboardService) buildRoomSnapshot(ctx context.Context, room *model.Room) (*store.RoomSnapshot, error) {
@@ -72,13 +76,16 @@ func (s *DashboardService) buildRoomSnapshot(ctx context.Context, room *model.Ro
 	snap.OpenAlerts = openAlerts
 	points, err := s.points.ListByRoom(ctx, room.ID)
 	if err != nil {
-		return snap, nil
+		return nil, err
 	}
 	var realtime []model.RealtimeReading
 	for _, p := range points {
 		latest, err := s.readings.LatestByPoint(ctx, p.ID)
 		if err != nil {
-			continue
+			if errors.Is(err, model.ErrNotFound) {
+				continue
+			}
+			return nil, err
 		}
 		realtime = append(realtime, model.RealtimeReading{
 			PointID:    p.ID,
